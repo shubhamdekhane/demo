@@ -1,0 +1,63 @@
+=======================================================================
+               SMARTSHOP MICROSERVICES - DEVELOPER RUNBOOK
+=======================================================================
+
+1. SYSTEM INFRASTRUCTURE (My Local Machine)
+-------------------------------------------
+* RAM: 16 GB (Enough to run full Dockerized infrastructure)
+* OS: Windows / Linux
+* Databases: MySQL (Port 3306)
+* Registry Server: Eureka (Port 8761)
+* Gateway: Spring Cloud Gateway (Port 8080 or 8989)
+
+2. THE GOLDEN STARTUP SEQUENCE (नेहमी याच क्रमाने सर्व्हिसेस चालू करा)
+-------------------------------------------------------------------
+जर हा क्रम चुकला, तर मायक्रोसर्व्हिसेस एकमेकांशी बोलू शकणार नाहीत आणि कन्सोलवर 
+रिपीटेड एरर लॉग्स येतील.
+
+   Step 1: Start Docker Desktop (Ensure it is running in background)
+   Step 2: Start Infrastructure Services (MySQL, Zipkin)
+   Step 3: Start Message Broker (Zookeeper & Kafka Broker)
+   Step 4: Start Service Registry (Eureka Server)
+   Step 5: Start API Gateway (Spring Cloud Gateway)
+   Step 6: Start Core Microservices (Product, Order, Inventory, etc.)
+   Step 7: Start Consumer/Dependent Services (Notification Service)
+
+3. PORTS & DASHBOARDS TO MEMORIZE (इंटरव्ह्यू आणि लोकल टेस्टिंगसाठी)
+-------------------------------------------------------------------
+* Eureka Dashboard:       http://localhost:8761
+* Zipkin Tracing UI:     http://localhost:9411
+* API Gateway URL:       http://localhost:8080 (All UI requests hit here)
+* Kafka Broker Port:     localhost:9092
+* Zookeeper Port:        localhost:2181
+
+4. DOCKER & KAFKA COMMON TROUBLESHOOTING (गाडी अडकल्यास काय करावे?)
+-------------------------------------------------------------------
+A] Kafka Connection Error (Repeated connection failure logs):
+   -> Reason: Your Notification-Service is up, but Kafka Broker container is down.
+   -> Fix: Check Docker Desktop if the Kafka container is 'Running' or 'Exited'.
+
+B] Zipkin Integration Failure (Missing Traces):
+   -> Reason: Sleuth/Micrometer is sending traces to the wrong port, or Zipkin 
+      is running inside Docker network and cannot see your local Java app.
+   -> Fix: Ensure 'spring.zipkin.base-url=http://localhost:9411/' is present 
+      in all microservices' application.yml files.
+
+C] Docker Out of Memory / Slow Down:
+   -> Even with 16GB RAM, sometimes Docker resource allocation limits are low.
+   -> Fix: Go to Docker Desktop Settings -> Resources -> Ensure at least 4GB to 6GB 
+      RAM and 3-4 CPUs are allocated to Docker.
+
+5. INTERVIEW QUICK ANSWERS (हा प्रोजेक्ट इंटरव्ह्यूमध्ये कसा सांगायचा?)
+-----------------------------------------------------------------------
+* Why Spring Cloud Gateway? 
+  -> It acts as a single entry point, handles global routing, and validates 
+     JWT tokens before forwarding requests downstream.
+* Why Kafka for Notification Service?
+  -> Asynchronous decoupling. Order service places the order immediately and 
+     pushes an event to Kafka. Notification service reads it whenever free.
+* Why Zipkin?
+  -> For Distributed Tracing. It helps track a unique request ID across multiple 
+     microservices to debug which service is causing latency or failure.
+
+=======================================================================
